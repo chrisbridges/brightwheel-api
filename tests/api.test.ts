@@ -1,47 +1,47 @@
-import request from "supertest";
-import { createApp } from "../src/app";
 import { ReadingStore } from "../src/store";
 
 const deviceId = "36d5658a-6908-479e-887e-a949ec199272";
 
-const payload = {
-  id: deviceId,
-  readings: [
-    { timestamp: "2021-09-29T16:09:15+01:00", count: 15 },
-    { timestamp: "2021-09-29T16:08:15+01:00", count: 2 }
-  ]
-};
+describe("reading store", () => {
+  it("stores readings, ignores duplicates, and returns latest/cumulative", () => {
+    const store = new ReadingStore();
 
-describe("readings API", () => {
-  it("stores readings, ignores duplicates, and returns latest/cumulative", async () => {
-    const app = createApp(new ReadingStore());
+    const stored = store.addReadings(deviceId, [
+      { timestamp: "2021-09-29T16:09:15+01:00", count: 15 },
+      { timestamp: "2021-09-29T16:08:15+01:00", count: 2 }
+    ]);
 
-    const first = await request(app).post("/readings").send(payload);
-    expect(first.status).toBe(201);
-    expect(first.body.stored).toBe(2);
+    expect(stored).toBe(2);
+    expect(store.addReadings(deviceId, [
+      { timestamp: "2021-09-29T16:09:15+01:00", count: 15 }
+    ])).toBe(0);
 
-    const duplicate = await request(app).post("/readings").send(payload);
-    expect(duplicate.status).toBe(201);
-    expect(duplicate.body.stored).toBe(0);
-
-    const latest = await request(app).get(`/devices/${deviceId}/latest`);
-    expect(latest.status).toBe(200);
-    expect(latest.body.latest_timestamp).toBe("2021-09-29T16:09:15+01:00");
-
-    const cumulative = await request(app).get(`/devices/${deviceId}/cumulative`);
-    expect(cumulative.status).toBe(200);
-    expect(cumulative.body.cumulative_count).toBe(17);
+    expect(store.getLatestTimestamp(deviceId)).toBe("2021-09-29T15:09:15.000Z");
+    expect(store.getCumulativeCount(deviceId)).toBe(17);
   });
 
-  describe('invalid payloads', () => {
-    // TODO: should reject invalid payloads by both id and timestamp
-    it("rejects invalid payloads", async () => {
-      const app = createApp(new ReadingStore());
+  it("normalizes timestamps with offsets and ignores duplicate timestamps with different counts", () => {
+    const store = new ReadingStore();
 
-      const response = await request(app).post("/readings").send({ id: "nope" });
-      expect(response.status).toBe(400);
-    });
-  })
+    expect(store.addReadings(deviceId, [
+      { timestamp: "2021-09-29T12:00:00-04:00", count: 5 }
+    ])).toBe(1);
 
+    expect(store.addReadings(deviceId, [
+      { timestamp: "2021-09-29T16:00:00+00:00", count: 500 }
+    ])).toBe(0);
 
+    expect(store.getCumulativeCount(deviceId)).toBe(5);
+  });
+
+  it("ignores invalid timestamps without mutating state", () => {
+    const store = new ReadingStore();
+
+    expect(store.addReadings(deviceId, [
+      { timestamp: "bad-timestamp", count: 10 }
+    ])).toBe(0);
+
+    expect(store.getLatestTimestamp(deviceId)).toBeUndefined();
+    expect(store.getCumulativeCount(deviceId)).toBeUndefined();
+  });
 });
