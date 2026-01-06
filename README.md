@@ -83,6 +83,7 @@ Response:
 
 Per device we store a `Map<epochMillis, count>`, plus `latestEpoch` and `totalCount`.
 This yields O(1) average ingest, O(1) latest lookup, and O(1) cumulative lookup.
+
 Tradeoff: we do not retain full reading history or support range queries; those would require a different structure.
 
 ## Assumptions and behavior
@@ -123,8 +124,3 @@ The amount of packages leveraged in this project were attempted to be kept to a 
 ## Parting Words
 
 Thank you for the time spent reviewing this project. I look forward to speaking with y'all further about it. This was fun :).
-
-TODO:
-
-- dockerize
-- tests easily structured and full coverage
