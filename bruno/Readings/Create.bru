@@ -1,0 +1,20 @@
+meta {
+  name: Create Readings
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/readings
+  body: json
+}
+
+body:json {
+  {
+    "id": "{{deviceId}}",
+    "readings": [
+      { "timestamp": "2021-09-29T16:08:15+01:00", "count": 2 },
+      { "timestamp": "2021-09-29T16:09:15+01:00", "count": 15 }
+    ]
+  }
+}

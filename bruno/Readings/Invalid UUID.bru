@@ -1,0 +1,19 @@
+meta {
+  name: Invalid UUID
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/readings
+  body: json
+}
+
+body:json {
+  {
+    "id": "not-a-uuid",
+    "readings": [
+      { "timestamp": "2021-09-29T16:09:15+01:00", "count": 15 }
+    ]
+  }
+}
