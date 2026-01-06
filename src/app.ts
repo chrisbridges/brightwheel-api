@@ -5,10 +5,11 @@ import { payloadSchema } from "./schemas";
 export const createApp = (store: ReadingStore) => {
   const app = express();
 
-  // payload size limiting
+  // payload size limiting to 1 MB
   app.use(express.json({ limit: "1mb" }));
 
   app.post("/readings", (req, res) => {
+    // ensure that payload is valid schema
     const parsed = payloadSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({
