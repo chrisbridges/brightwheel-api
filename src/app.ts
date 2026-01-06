@@ -52,6 +52,7 @@ export const createApp = (store: ReadingStore) => {
     return res.json({ cumulative_count: total });
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     if (err instanceof SyntaxError) {
       return res.status(400).json({ error: "Invalid JSON" });
