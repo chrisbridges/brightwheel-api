@@ -86,4 +86,5 @@ TODO:
 
 - dockerize
 - bruno collection
-- tests easily structured
+- tests easily structured and full coverage
+- GitHub link
