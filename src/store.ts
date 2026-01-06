@@ -4,10 +4,10 @@ export type Reading = {
 };
 
 type DeviceAggregate = {
-  latestTimestamp?: string;
+  latestTimestampIso?: string;
   latestEpoch?: number;
   totalCount: number;
-  readingsByTimestamp: Map<string, number>;
+  readingsByEpoch: Map<number, number>;
 };
 
 export class ReadingStore {
@@ -15,25 +15,32 @@ export class ReadingStore {
 
   addReadings(deviceId: string, readings: Reading[]): number {
     let stored = 0;
-    const device = this.getOrCreate(deviceId);
+    let device = this.devices.get(deviceId);
 
     for (const reading of readings) {
-      if (device.readingsByTimestamp.has(reading.timestamp)) {
-        continue;
-      }
-
       const epoch = Date.parse(reading.timestamp);
       if (Number.isNaN(epoch)) {
         continue;
       }
 
-      device.readingsByTimestamp.set(reading.timestamp, reading.count);
+      // Create a device record only after a valid reading so empty/invalid payloads don't create state.
+      if (!device) {
+        device = this.createDevice(deviceId);
+      }
+
+      // Use epoch millis to normalize offsets and treat (deviceId, timestamp) as the dedupe key.
+      if (device.readingsByEpoch.has(epoch)) {
+        continue;
+      }
+
+      device.readingsByEpoch.set(epoch, reading.count);
       device.totalCount += reading.count;
       stored += 1;
 
       if (device.latestEpoch === undefined || epoch > device.latestEpoch) {
         device.latestEpoch = epoch;
-        device.latestTimestamp = reading.timestamp;
+        // Return a canonical ISO timestamp to avoid offset ambiguity.
+        device.latestTimestampIso = new Date(epoch).toISOString();
       }
     }
 
@@ -41,7 +48,7 @@ export class ReadingStore {
   }
 
   getLatestTimestamp(deviceId: string): string | undefined {
-    return this.devices.get(deviceId)?.latestTimestamp;
+    return this.devices.get(deviceId)?.latestTimestampIso;
   }
 
   getCumulativeCount(deviceId: string): number | undefined {
@@ -52,15 +59,10 @@ export class ReadingStore {
     return device.totalCount;
   }
 
-  private getOrCreate(deviceId: string): DeviceAggregate {
-    const existing = this.devices.get(deviceId);
-    if (existing) {
-      return existing;
-    }
-
+  private createDevice(deviceId: string): DeviceAggregate {
     const created: DeviceAggregate = {
       totalCount: 0,
-      readingsByTimestamp: new Map()
+      readingsByEpoch: new Map()
     };
     this.devices.set(deviceId, created);
     return created;
