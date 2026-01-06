@@ -1,6 +1,6 @@
 # brightwheel API Take-Home
 
-## Quick start
+### Quick start
 
 ```bash
 npm install
@@ -16,13 +16,13 @@ npm run build
 npm start
 ```
 
-### Bruno Collection
+## Bruno Collection
 
 I have included a Bruno collection here that can be imported to smoke-test the server's functionality.
 
 _Ensure that after importing the collection, you are leveraging the "Local" environment variables._
 
-### Docker
+## Docker
 
 A Dockerfile was also added to ease "works on my machine" issues.
 
