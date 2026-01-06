@@ -21,6 +21,7 @@ export const createApp = (store: ReadingStore) => {
       });
     }
 
+    // prevent duplicate timestamps for a device
     try {
       const stored = store.addReadings(parsed.data.id, parsed.data.readings);
       return res.status(201).json({ stored });
