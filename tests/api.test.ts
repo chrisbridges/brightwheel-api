@@ -33,10 +33,15 @@ describe("readings API", () => {
     expect(cumulative.body.cumulative_count).toBe(17);
   });
 
-  it("rejects invalid payloads", async () => {
-    const app = createApp(new ReadingStore());
+  describe('invalid payloads', () => {
+    // TODO: should reject invalid payloads by both id and timestamp
+    it("rejects invalid payloads", async () => {
+      const app = createApp(new ReadingStore());
 
-    const response = await request(app).post("/readings").send({ id: "nope" });
-    expect(response.status).toBe(400);
-  });
+      const response = await request(app).post("/readings").send({ id: "nope" });
+      expect(response.status).toBe(400);
+    });
+  })
+
+
 });

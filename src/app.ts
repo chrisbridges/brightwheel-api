@@ -2,6 +2,7 @@ import express from "express";
 import { z } from "zod";
 import { ReadingStore } from "./store";
 
+// TODO: abstract schemas into own file?
 const readingSchema = z.object({
   timestamp: z.string().datetime({ offset: true }),
   count: z.number().int()
@@ -11,6 +12,7 @@ const payloadSchema = z.object({
   id: z.string().uuid(),
   readings: z.array(readingSchema).min(1)
 });
+
 
 export const createApp = (store: ReadingStore) => {
   const app = express();
