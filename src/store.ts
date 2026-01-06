@@ -3,6 +3,16 @@ export type Reading = {
   count: number;
 };
 
+export class DuplicateTimestampError extends Error {
+  readonly epoch: number;
+
+  constructor(epoch: number) {
+    super("Duplicate timestamp in payload");
+    this.name = "DuplicateTimestampError";
+    this.epoch = epoch;
+  }
+}
+
 type DeviceAggregate = {
   latestTimestampIso?: string;
   latestEpoch?: number;
@@ -16,12 +26,18 @@ export class ReadingStore {
   addReadings(deviceId: string, readings: Reading[]): number {
     let stored = 0;
     let device = this.devices.get(deviceId);
+    const seenEpochs = new Set<number>();
 
     for (const reading of readings) {
       const epoch = Date.parse(reading.timestamp);
       if (Number.isNaN(epoch)) {
         continue;
       }
+
+      if (seenEpochs.has(epoch)) {
+        throw new DuplicateTimestampError(epoch);
+      }
+      seenEpochs.add(epoch);
 
       // Create a device record only after a valid reading so empty/invalid payloads don't create state.
       if (!device) {

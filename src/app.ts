@@ -1,5 +1,5 @@
 import express from "express";
-import { ReadingStore } from "./store";
+import { DuplicateTimestampError, ReadingStore } from "./store";
 import { payloadSchema } from "./schemas";
 
 export const createApp = (store: ReadingStore) => {
@@ -20,8 +20,18 @@ export const createApp = (store: ReadingStore) => {
       });
     }
 
-    const stored = store.addReadings(parsed.data.id, parsed.data.readings);
-    return res.status(201).json({ stored });
+    try {
+      const stored = store.addReadings(parsed.data.id, parsed.data.readings);
+      return res.status(201).json({ stored });
+    } catch (error) {
+      if (error instanceof DuplicateTimestampError) {
+        return res.status(400).json({
+          error: "Duplicate timestamp in payload",
+          details: [{ path: "readings", message: "Duplicate timestamp in payload" }]
+        });
+      }
+      throw error;
+    }
   });
 
   app.get("/devices/:id/latest", (req, res) => {

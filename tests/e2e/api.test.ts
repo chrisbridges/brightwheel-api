@@ -30,6 +30,23 @@ describe("POST /readings", () => {
     });
   });
 
+  it("rejects conflicting counts across duped timestamps", async () => {
+    await withServer(async ({ baseUrl }) => {
+      const response = await postReadings(baseUrl, [
+        { timestamp: "2021-09-29T16:09:15+01:00", count: 15 },
+        { timestamp: "2021-09-29T16:09:15+01:00", count: 99 }
+      ]);
+
+      expect(response.status).toBe(400);
+      expect(response.json).toMatchObject({
+        error: "Duplicate timestamp in payload",
+        details: expect.arrayContaining([
+          { path: "readings", message: "Duplicate timestamp in payload" }
+        ])
+      });
+    });
+  });
+
   it("returns 400 for an invalid uuid", async () => {
     await withServer(async ({ baseUrl }) => {
       const response = await postReadings(
@@ -39,6 +56,38 @@ describe("POST /readings", () => {
       );
 
       expect(response.status).toBe(400);
+    });
+  });
+
+  it("returns 400 with details for invalid timestamps", async () => {
+    await withServer(async ({ baseUrl }) => {
+      const response = await postReadings(baseUrl, [
+        { timestamp: "2021-09-29T16:09:15", count: 15 }
+      ]);
+
+      expect(response.status).toBe(400);
+      expect(response.json).toMatchObject({
+        error: "Invalid payload",
+        details: expect.arrayContaining([
+          { path: "readings.0.timestamp", message: expect.any(String) }
+        ])
+      });
+    });
+  });
+
+  it("returns 400 with details for negative counts", async () => {
+    await withServer(async ({ baseUrl }) => {
+      const response = await postReadings(baseUrl, [
+        { timestamp: "2021-09-29T16:09:15+01:00", count: -1 }
+      ]);
+
+      expect(response.status).toBe(400);
+      expect(response.json).toMatchObject({
+        error: "Invalid payload",
+        details: expect.arrayContaining([
+          { path: "readings.0.count", message: expect.any(String) }
+        ])
+      });
     });
   });
 
@@ -61,6 +110,32 @@ describe("POST /readings", () => {
 
       expect(response.status).toBe(400);
       expect(response.json).toEqual({ error: "Invalid JSON" });
+    });
+  });
+
+  it("accepts payloads just under the size limit", async () => {
+    await withServer(async ({ baseUrl }) => {
+      const payload = buildSizedPayload(1024 * 1024 - 100);
+      const response = await request(baseUrl, {
+        method: "POST",
+        path: "/readings",
+        rawBody: payload
+      });
+
+      expect(response.status).toBe(201);
+    });
+  });
+
+  it("rejects payloads over the size limit", async () => {
+    await withServer(async ({ baseUrl }) => {
+      const payload = buildSizedPayload(1024 * 1024 + 100);
+      const response = await request(baseUrl, {
+        method: "POST",
+        path: "/readings",
+        rawBody: payload
+      });
+
+      expect(response.status).toBe(500);
     });
   });
 });
@@ -136,3 +211,18 @@ const getCumulative = (baseUrl: string, id: string = deviceId) =>
     method: "GET",
     path: `/devices/${id}/cumulative`
   });
+
+const buildSizedPayload = (targetBytes: number): string => {
+  const basePayload = {
+    id: deviceId,
+    readings: [{ timestamp: "2021-09-29T16:09:15+01:00", count: 1 }],
+    padding: ""
+  };
+  const baseSize = Buffer.byteLength(JSON.stringify(basePayload));
+  const paddingLength = Math.max(0, targetBytes - baseSize);
+  const payload = {
+    ...basePayload,
+    padding: "a".repeat(paddingLength)
+  };
+  return JSON.stringify(payload);
+};

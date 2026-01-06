@@ -43,6 +43,18 @@ describe("ReadingStore.addReadings", () => {
     expect(stored).toBe(0);
   });
 
+
+  it("rejects duplicate timestamps within a single payload", () => {
+    const store = new ReadingStore();
+
+    expect(() =>
+      store.addReadings(deviceId, [
+        { timestamp: "2021-09-29T16:09:15+01:00", count: 15 },
+        { timestamp: "2021-09-29T16:09:15+01:00", count: 99 }
+      ])
+    ).toThrow("Duplicate timestamp in payload");
+  });
+
   it("returns zero for an empty readings array", () => {
     const store = new ReadingStore();
 
