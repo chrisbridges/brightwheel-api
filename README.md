@@ -87,6 +87,7 @@ Tradeoff: we do not retain full reading history or support range queries; those 
 
 ## Assumptions and behavior
 
+- Payloads that contain duplicate timestamps are rejected to prevent inconsistent counts from being stored
 - `count` is per-reading (incremental); cumulative is the sum of unique-timestamp readings.
 - Duplicate definition is `(deviceId, timestamp)` after timestamp normalization; duplicates with different counts are ignored.
 - “Latest” is the maximum timestamp value, not arrival order.
