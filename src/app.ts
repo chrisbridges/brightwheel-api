@@ -4,8 +4,9 @@ import { ReadingStore } from "./store";
 
 // TODO: abstract schemas into own file?
 const readingSchema = z.object({
+  // Normalize by parsing ISO-8601 with offset; reject non-integers and unsafe counts.
   timestamp: z.string().datetime({ offset: true }),
-  count: z.number().int()
+  count: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)
 });
 
 const payloadSchema = z.object({
