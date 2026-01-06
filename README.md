@@ -18,6 +18,10 @@ npm start
 
 ## API
 
+### Bruno Collection
+
+MAKE SURE YOU HAVE ENABLED "LOCAL" ENVIRONMENT VARIABLES
+
 ### POST /readings
 
 Store readings for a device. Duplicate timestamps are ignored.

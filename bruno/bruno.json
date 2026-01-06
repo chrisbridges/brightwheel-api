@@ -1,4 +1,6 @@
 {
   "version": "1",
-  "name": "brightwheel-api"
+  "name": "brightwheel-api",
+  "type": "collection",
+  "description": "Smoke tests for brightwheel-api"
 }
