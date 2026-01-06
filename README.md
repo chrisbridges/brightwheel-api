@@ -22,6 +22,14 @@ I have included a Bruno collection here that can be imported to smoke-test the s
 
 _Ensure that after importing the collection, you are leveraging the "Local" environment variables._
 
+### Docker
+
+A Dockerfile was also added to ease "works on my machine" issues.
+
+You should be able to simply pull the repo, run `docker build -t brightwheel-api .`, then `docker run -p 3000:3000 brightwheel-api`.
+
+An `npm install` might be required in your local terminal (was when I ran it on my wife's laptop), but hopefully not.
+
 ## API Endpoints
 
 ### POST /readings
