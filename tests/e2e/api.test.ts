@@ -1,29 +1,11 @@
 import http from "http";
 import { createApp } from "../../src/app";
 import { ReadingStore } from "../../src/store";
+import { RequestOptions, ResponseData, ServerContext } from "../shared/types";
 
 const deviceId = "36d5658a-6908-479e-887e-a949ec199272";
 
-type ServerContext = {
-  baseUrl: string;
-  server: http.Server;
-};
-
-type RequestOptions = {
-  method: string;
-  path: string;
-  body?: unknown;
-  rawBody?: string;
-  headers?: Record<string, string>;
-};
-
-type ResponseData = {
-  status: number;
-  body: string;
-  json?: unknown;
-  headers: http.IncomingHttpHeaders;
-};
-
+// TODO: abstract common test server setup/teardown code into a shared utility module within tests directory
 const startServer = (): ServerContext => {
   const store = new ReadingStore();
   const app = createApp(store);
@@ -107,8 +89,10 @@ const withServer = async (
 
 describe("POST /readings", () => {
   it("returns 201 with stored count for a valid payload", async () => {
+    // TODO: refactor to reduce redundancy with other tests
     await withServer(async ({ baseUrl }) => {
       const response = await request(baseUrl, {
+        // TODO: create basic POST request object and then reuse it in other tests for less redundancy
         method: "POST",
         path: "/readings",
         body: {
@@ -204,6 +188,7 @@ describe("POST /readings", () => {
 describe("GET /devices/:id/latest", () => {
   it("returns 404 for an unknown device", async () => {
     await withServer(async ({ baseUrl }) => {
+      // TODO: refactor to reduce redundancy with other tests
       const response = await request(baseUrl, {
         method: "GET",
         path: `/devices/${deviceId}/latest`
@@ -240,6 +225,7 @@ describe("GET /devices/:id/latest", () => {
 
 describe("GET /devices/:id/cumulative", () => {
   it("returns 404 for an unknown device", async () => {
+    // TODO: refactor to reduce redundancy with other tests
     await withServer(async ({ baseUrl }) => {
       const response = await request(baseUrl, {
         method: "GET",
